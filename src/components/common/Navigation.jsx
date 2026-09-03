@@ -117,7 +117,7 @@ export default function Navigation() {
 
   return (
     <>
-      <S.HeaderBar>
+      <S.HeaderBar opaque={pathname?.startsWith('/store')}>
         <S.HeaderLeft>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <S.Brand>Home Faber</S.Brand>

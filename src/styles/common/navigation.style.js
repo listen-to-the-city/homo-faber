@@ -1,7 +1,9 @@
 import styled from '@emotion/styled';
 import theme from '@/styles/Theme';
 
-export const HeaderBar = styled.header`
+export const HeaderBar = styled('header', {
+  shouldForwardProp: (prop) => prop !== 'opaque',
+})`
   position: fixed;
   top: 0;
   left: 0;
@@ -12,7 +14,7 @@ export const HeaderBar = styled.header`
   justify-content: space-between;
   height: 50px;
   padding: 10px 20px;
-  background-color: #ffffff;
+  background-color: ${(props) => (props.opaque ? '#ffffff' : 'transparent')};
   pointer-events: auto;
 
   ${theme.media.mobile} {
@@ -49,7 +51,9 @@ export const NavGroup = styled.nav`
   height: 30px;
   padding: 3px;
   border-radius: 5px;
-  background: rgba(227, 227, 227, 0.45);
+  background: rgba(227, 227, 227, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 `;
 
 export const NavList = styled.nav`
@@ -81,6 +85,7 @@ export const NavLink = styled('span', {
   border: none;
   font-family: inherit;
   white-space: nowrap;
+  transition: color 0.2s ease, background-color 0.2s ease;
 
   ${theme.media.mobile} {
     padding: 0 6px;
@@ -88,6 +93,7 @@ export const NavLink = styled('span', {
 
   &:hover {
     color: #000000;
+    background: rgba(227, 227, 227, 0.55);
   }
 `;
 
@@ -143,16 +149,19 @@ export const LangButton = styled.button`
   padding: 0 8px;
   border: none;
   border-radius: 5px;
-  background: rgba(227, 227, 227, 0.45);
+  background: rgba(227, 227, 227, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   font-weight: 400;
   letter-spacing: -0.01em;
   color: #000;
   cursor: pointer;
   font-family: inherit;
   line-height: 1.6;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background: rgba(227, 227, 227, 0.7);
+    background: rgba(227, 227, 227, 0.55);
   }
 `;
 
@@ -162,8 +171,11 @@ export const IconButton = styled.button`
   padding: 5px;
   border: none;
   border-radius: 5px;
-  background: rgba(227, 227, 227, 0.45);
+  background: rgba(227, 227, 227, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   color: #222;
+  transition: background-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;

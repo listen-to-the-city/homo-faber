@@ -29,7 +29,7 @@ export const FnqPageName = styled.h1`
 
 export const FnqCard = styled.div`
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
   padding: 15px;
   background: #fbfbfb;
   border-radius: 5px;
