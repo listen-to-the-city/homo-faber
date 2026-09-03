@@ -138,7 +138,7 @@ const globalStyle = css`
   }
 
   html, body {
-    font-size: 1px;
+    font-size: 13px;
     line-height: 1.6;
     letter-spacing: -0.01em;
   }
