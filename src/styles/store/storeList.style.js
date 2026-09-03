@@ -1,120 +1,186 @@
 import styled from '@emotion/styled';
 import theme from '@/styles/Theme';
+import { captionText } from '@/styles/typography';
 
-export const TableWrapper = styled.article`
-  width: 100dvw;
-  overflow-x: hidden;
-  overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* Safari sticky support */
-  -webkit-overflow-scrolling: touch;
-  padding-left: 30px;
-  margin-left: -30px;
+export const ListLabelBar = styled.div`
+  display: grid;
+  grid-template-columns: 70px 190px minmax(80px, 1fr) minmax(180px, 2.4fr) 80px;
+  width: 100%;
+  padding: 8px 20px;
+  color: #a0a0a0;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  border-bottom: 0.5px solid #efefef;
 
   ${theme.media.mobile} {
-    padding-left: 10px;
-    margin-left: 0;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+    padding: 8px 10px;
   }
+`;
+
+export const ListLabel = styled.span`
+  min-width: 0;
+
+  &:nth-of-type(2) {
+    color: #000;
+  }
+
+  ${theme.media.mobile} {
+    &:nth-of-type(1) {
+      grid-column: 1;
+    }
+
+    &:nth-of-type(2) {
+      grid-column: 2;
+    }
+
+    &:nth-of-type(3) {
+      grid-column: 3;
+    }
+
+    &:nth-of-type(4) {
+      grid-column: 4 / span 3;
+    }
+
+    &:nth-of-type(5) {
+      grid-column: 7;
+    }
+  }
+`;
+
+export const TableWrapper = styled.article`
+  width: 100%;
+  overflow: visible;
+  flex: none;
+  position: relative;
+  z-index: 0;
 `;
 
 export const StoreTable = styled.table`
   width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-gothic);
-  /* Safari sticky support */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  border-collapse: separate;
+  border-spacing: 0;
+
+  ${theme.media.mobile} {
+    display: block;
+    width: 100%;
+  }
 `;
 
 export const TableHeader = styled.thead`
-  background-color: #322F18;
-  color: #FFF8B8;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  /* Safari sticky support */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* Remove display: flex as it breaks table structure */
+  display: none;
 `;
 
 export const TableHeaderCell = styled.th`
-  padding: 14px 15px 13px 15px;
+  padding: 8px 20px;
   text-align: left;
-  font-size: 1.2rem;
-  font-weight: 800;
-  transform: scaleX(0.8);
-  transform-origin: left;
-  /* Safari sticky support */
-  -webkit-transform: scaleX(0.8) translateZ(0);
-  transform: scaleX(0.8) translateZ(0);
+  font-weight: 400;
+  color: #a0a0a0;
+  white-space: nowrap;
 
   ${theme.media.mobile} {
-    padding: 13px 14px 12px 14px;
-    font-size: 1rem;
+    padding: 8px 0;
   }
+`;
+
+export const SortButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+`;
+
+export const SortIcon = styled('img', {
+  shouldForwardProp: (prop) => prop !== '$asc',
+})`
+  width: 6.3px;
+  height: 7px;
+  display: block;
+  transform: ${(props) => (props.$asc ? 'none' : 'rotate(180deg)')};
 `;
 
 export const TableHeaderCellBookmark = styled.th`
-  width: 15px;
-  padding: unset;
-  margin-left: -14px;
-  background-color: var(--yellow);
-  text-align: center;
+  width: 28px;
+  padding: 8px 0;
+
+  ${theme.media.mobile} {
+    display: none;
+  }
 `;
 
 export const TableBody = styled.tbody`
-  overflow-y: auto;
-  letter-spacing: 0.1rem;
-  /* Safari sticky support */
-  -webkit-overflow-scrolling: touch;
-`
+  ${theme.media.mobile} {
+    display: block;
+  }
+`;
 
-export const TableRow = styled.tr`
-  padding-left: 1px;
-  display: flex;
-  align-items: center;
-  background-color: ${props => props.isHovered ? '#f9f9f9' : 'transparent'};
-  transition: background-color 0.2s ease;
-  
+export const StatusRow = styled.tr`
+  ${theme.media.mobile} {
+    display: block;
+    padding: 20px 10px;
+
+    td {
+      display: block;
+      width: 100%;
+    }
+  }
+`;
+
+export const TableRow = styled('tr', {
+  shouldForwardProp: (prop) => prop !== 'isHovered',
+})`
+  border-top: 0.5px solid #efefef;
+  background-color: ${(props) => (props.isHovered ? '#f9f9f9' : 'transparent')};
+  cursor: pointer;
+
   &:hover {
     background-color: #f9f9f9;
-    cursor: pointer;
   }
-  
-  // /* Map2D에서 호버된 경우 더 강한 스타일 */
-  // ${props => props.isHovered && `
-  //   background-color: #d4edda !important;
-  //   border-left: 3px solid #28a745;
-  //   transform: scale(1.01);
-  //   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  // `}
+
+  ${theme.media.mobile} {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px;
+    align-items: start;
+    min-height: 52px;
+  }
 `;
 
 export const TableCell = styled.td`
-  padding: 11px 0px 9px 0px;
-  vertical-align: middle;
-  font-size: 1.1rem;
+  padding: 10px 20px;
+  vertical-align: top;
+  color: #000;
 
   ${theme.media.mobile} {
-    padding: 11px 0px 9px 0px;
+    display: block;
+    padding: 0;
+    width: auto;
+  }
+`;
+
+export const LabelCell = styled(TableCell)`
+  width: 70px;
+  ${captionText}
+
+  ${theme.media.mobile} {
+    width: auto;
+    grid-column: 1;
   }
 `;
 
 export const BookmarkCell = styled(TableCell)`
   width: 28px;
-  padding: unset;
-  margin-left: -24px;
-  text-align: center;
+  padding: 10px 0 10px 12px;
 
   ${theme.media.mobile} {
-    width: 27px;
-    margin-left: -22px;
-    padding: unset;
+    display: none;
   }
 `;
 
@@ -122,104 +188,70 @@ export const BookmarkButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  margin-right: -12px;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
-  ${theme.media.mobile} {
-    margin-right: -18px;
-  }
+  padding: 0;
 `;
 
 export const BookmarkIcon = styled.span`
-  font-size: 1.3rem;
-  color: ${props => props.isBookmarked ? '#ff6b6b' : '#ccc'};
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: ${props => props.isBookmarked ? '#ff5252' : '#999'};
-    transform: scale(1.2);
-  }
+  color: ${(props) => (props.isBookmarked ? '#111' : '#ccc')};
 `;
 
 export const TitleCell = styled(TableCell)`
-  display: flex;
-  align-items: center;
-  padding-left: 10px;
-  letter-spacing: 0.18rem;
-  width: 201.8px;
-  overflow-x: auto;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-      display: none;
-  }
+  width: 190px;
 
   ${theme.media.mobile} {
-    width: 120px;
-    overflow-x: auto;
-    padding-left: 7px;
+    width: auto;
+    grid-column: 2;
+    min-width: 0;
   }
-`
+`;
 
 export const Name = styled.div`
-  font-weight: 700;
-  margin-right: 12px;
+  font-weight: 400;
+`;
 
+export const IndustryCell = styled(TableCell)`
   ${theme.media.mobile} {
-    margin-right: 10px;
+    grid-column: 3;
+    min-width: 0;
   }
-`
+`;
+
 export const Industry = styled.div`
-  margin-right: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-`
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  color: #a0a0a0;
+  ${captionText}
+`;
 
 export const Line = styled.div`
-  border-bottom: 1.6px dotted; 
-  flex: 1;
-`
+  display: none;
+`;
 
 export const KeywordCell = styled(TableCell)`
-  width: 570px;
-  display: block;
-  padding-left: 10px;
+  max-width: 420px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 
   ${theme.media.mobile} {
-    width: calc(100dvw - 132px);
-    padding-left: 10px;
-    overflow-x: scroll;
+    max-width: none;
+    overflow: visible;
     text-overflow: unset;
-    white-space: unset;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    grid-column: 4 / span 3;
   }
 `;
 
 export const ContactCell = styled(TableCell)`
-  padding-left: 15px;
-  font-family: var(--font-abeezee);
-  letter-spacing: 0.05rem;
-  font-size: 1.14rem;
-  text-align: right;
-  padding-right: 7px;
-  width: 140px;
-`;
+  width: 80px;
 
+  ${theme.media.mobile} {
+    width: auto;
+    padding-right: 0;
+    grid-column: 7;
+    min-width: 0;
+  }
+`;

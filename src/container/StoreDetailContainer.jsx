@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useStoreDetail } from '@/hooks/useStores';
 import { getStoreTypes } from '@/utils/api/stores-api';
 import { getInterviews } from '@/utils/api/interview-api';
@@ -132,39 +132,19 @@ function StoreDetailContainer({ }) {
       e.stopPropagation();
       if (panelState === 'collapsed') {
         setPanelState('expanded');
-        // StoreContainer도 expanded 되도록 이벤트 발생
         window.dispatchEvent(new CustomEvent('expandPanel', { detail: { route: 'store' } }));
       }
     }
   };
 
-  // 패널 상태에 따른 initial 위치 계산 (transform 사용)
-  const getInitialPosition = useMemo(() => {
-    const isFirstMount = prevStoreIdRef.current !== storeId && storeId !== null;
-
-    if (panelState === 'hidden') {
-      return isMobile ? { y: '100dvh' } : { x: '100dvw' };
-    }
-
-    if (panelState === 'expanded') {
-      // 처음 마운트될 때만 화면 밖에서 시작, 이후에는 initial 제거하여 motion이 자동 감지
-      return isFirstMount ? (isMobile ? { y: '100dvh' } : { x: '100dvw' }) : undefined;
-    }
-
-    // collapsed - expanded에서 collapsed로 변경될 때는 현재 위치에서 시작
-    return undefined;
-  }, [panelState, storeId, isMobile]);
-
-  // motion이 panelState를 직접 추적하도록 animate 값 계산 (transform 사용)
   const animateValue = useMemo(() => {
     if (panelState === 'hidden') {
-      return isMobile ? { y: '100dvh' } : { x: '100dvw' };
+      return isMobile ? { y: '100dvh' } : { x: '100%' };
     }
     if (panelState === 'expanded') {
       return isMobile ? { y: 0 } : { x: 0 };
     }
-    // collapsed
-    return isMobile ? { y: 'calc(-26px + 80dvh)' } : { x: 'calc(80vw - 200px)' };
+    return isMobile ? { y: 0 } : { x: 0 };
   }, [panelState, isMobile]);
 
   const handleBookmarkClick = () => {
@@ -196,27 +176,36 @@ function StoreDetailContainer({ }) {
   return (
     <>
       <AnimatePresence>
-        {storeId && (
+        {storeId && isReady && (
           <S.DetailWrapper
             key={storeId}
             isMobile={isMobile}
-            initial={getInitialPosition}
+            initial={isMobile ? { y: '100dvh' } : { x: '100%' }}
             animate={animateValue}
-            exit={isMobile ? { y: '100dvh' } : { x: '100dvw' }}
-            transition={{ duration: 1, ease: [0.2, 0, 0.4, 1] }}
+            exit={isMobile ? { y: '100dvh' } : { x: '100%' }}
+            transition={{ duration: 0.35, ease: [0.2, 0, 0.4, 1] }}
             onClick={handlePanelClick}
           >
-
-
             <>
-              <S.DetailPageName>업체 상세</S.DetailPageName>
-              {interviews.length > 0 && (
-                <S.InterviewButton
-                  onClick={() => router.push(`/interview/${interviews[0].id}`)}
-                >
-                  {store?.person} 기술자 인터뷰
-                </S.InterviewButton>
-              )}
+              <S.DetailHeader>
+                <S.StoreName>
+                  <S.StoreNameTxt>{store?.name || '업체 상세'}</S.StoreNameTxt>
+                  {user && store && (
+                    <S.BookmarkButton
+                      onClick={handleBookmarkClick}
+                      disabled={loading}
+                      title={isStoreBookmarked(storeId) ? '북마크 제거' : '북마크 추가'}
+                    >
+                      <S.BookmarkIcon isBookmarked={isStoreBookmarked(storeId)}>
+                        {isStoreBookmarked(storeId) ? '★' : '☆'}
+                      </S.BookmarkIcon>
+                    </S.BookmarkButton>
+                  )}
+                </S.StoreName>
+                <S.CloseButton type="button" aria-label="닫기" onClick={() => router.push('/store')}>
+                  <img src="/img/icons/icon-minus.svg" alt="" />
+                </S.CloseButton>
+              </S.DetailHeader>
 
 
               {error ? (
@@ -228,22 +217,21 @@ function StoreDetailContainer({ }) {
               ) : (
                 <S.StoreDetailCard>
                   <S.StoreDetailSection>
-                    <S.StoreName>
-                      <S.StoreNameTxt>{store.name}</S.StoreNameTxt>
-                      {/* 북마크 버튼 */}
-                      {user && (
-                        <S.BookmarkButton
-                          onClick={handleBookmarkClick}
-                          disabled={loading}
-                          title={isStoreBookmarked(storeId) ? '북마크 제거' : '북마크 추가'}
-                        >
-                          <S.BookmarkIcon isBookmarked={isStoreBookmarked(storeId)}>
-                            {isStoreBookmarked(storeId) ? '★' : '☆'}
-                          </S.BookmarkIcon>
-                        </S.BookmarkButton>
+                    <S.InfoGroup>
+                    <S.InfoBlock>
+                      <S.SectionLabel>제조 서비스</S.SectionLabel>
+                      {store.keyword?.length > 0 && (
+                        <S.StoreTagList>
+                          {store.keyword.map((tag) => (
+                            <S.StoreTag key={tag}>{tag}</S.StoreTag>
+                          ))}
+                        </S.StoreTagList>
                       )}
-                    </S.StoreName>
-                    {store.address && (
+                    </S.InfoBlock>
+
+                    <S.InfoBlock>
+                      <S.SectionLabel>가게 정보</S.SectionLabel>
+                      {store.address && (
                       <S.StoreAdress>
                         <a
                           href={`https://map.naver.com/v5/search/${encodeURIComponent(store.address)}`}
@@ -270,23 +258,6 @@ function StoreDetailContainer({ }) {
                       </S.StoreAdress>
                     )}
 
-                    {/* {store.store_industry?.some(industry => industry.industry_types?.name) && (
-                      <S.StoreIndustry>
-                        {store.store_industry
-                          .map(industry => industry.industry_types?.name)
-                          .filter(Boolean)
-                          .join(' • ')}
-                      </S.StoreIndustry>
-                    )} */}
-
-                    <S.StoreTagList>
-                      {store.keyword?.length > 0 && (
-                        <S.StoreTag>
-                          {store.keyword.join(', ')}
-                        </S.StoreTag>
-                      )}
-                    </S.StoreTagList>
-
                     {store.store_capacity?.some(capacity => capacity.capacity_types?.name) && (
                       <S.StoreCapacity>
                         {store.store_capacity
@@ -303,7 +274,6 @@ function StoreDetailContainer({ }) {
                     {store.description && (
                       <S.StoreDescription>{store.description}</S.StoreDescription>
                     )}
-
 
                     <S.StoreContactList>
                       {store.store_contacts?.length > 0 &&
@@ -335,9 +305,39 @@ function StoreDetailContainer({ }) {
                           })
                       }
                     </S.StoreContactList>
+                    </S.InfoBlock>
+                    </S.InfoGroup>
 
+                    {interviews.length > 0 && (
+                      <S.InterviewButton
+                        onClick={() => router.push(`/interview/${interviews[0].id}`)}
+                      >
+                        <S.InterviewLabel>{store?.person} 기술자 인터뷰</S.InterviewLabel>
+                        <S.InterviewArrow>
+                          <img src="/img/icons/icon-chevron-right.svg" alt="" />
+                        </S.InterviewArrow>
+                      </S.InterviewButton>
+                    )}
 
-                    {/* 댓글 섹션 - 웹에서만 표시 */}
+                    <S.StoreImgSection>
+                      {store.card_img && (
+                        <S.StoreCardImg
+                          src={`${store.card_img}`}
+                          onClick={() => handleImageClick(store.card_img, '스토어 대표 이미지')}
+                        />
+                      )}
+                      {store.store_gallery?.length > 0 &&
+                        store.store_gallery
+                          .map((tag) => tag?.image_url)
+                          .map((imgURL, index) => (
+                            <S.StoreImg
+                              key={index}
+                              src={`${imgURL}`}
+                              onClick={() => handleImageClick(imgURL, `갤러리 이미지 ${index + 1}`)}
+                            />
+                          ))}
+                    </S.StoreImgSection>
+
                     {!isMobile && (
                       <S2.CommentsSection>
                         <S2.CommentsTitle>후기 ({comments.length})</S2.CommentsTitle>
@@ -366,31 +366,6 @@ function StoreDetailContainer({ }) {
                       </S2.CommentsSection>
                     )}
                   </S.StoreDetailSection>
-
-                  <S.StoreImgSection>
-                    {store.card_img && (
-                      <S.StoreCardImg
-                        src={`${store.card_img}`}
-                        onClick={() => handleImageClick(store.card_img, '스토어 대표 이미지')}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    )}
-
-                    {store.store_gallery?.length > 0 && (
-                      <S.StoreImgList>
-                        {store.store_gallery
-                          .map(tag => tag?.image_url)
-                          .map((imgURL, index) => (
-                            <S.StoreImg
-                              key={index}
-                              src={`${imgURL}`}
-                              onClick={() => handleImageClick(imgURL, `갤러리 이미지 ${index + 1}`)}
-                              style={{ cursor: 'pointer' }}
-                            />
-                          ))}
-                      </S.StoreImgList>
-                    )}
-                  </S.StoreImgSection>
                 </S.StoreDetailCard>
               )}
 

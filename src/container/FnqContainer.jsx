@@ -8,6 +8,8 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import Editor from '@/components/interview/Editor';
 import Popup from '@/components/common/Popup';
 import Link from 'next/link';
+import { getStoreTypes } from '@/utils/api/stores-api';
+import { convertMaterialNameToKorean } from '@/utils/converters';
 
 function FnqContainer() {
   const { user } = useAuth();
@@ -16,6 +18,8 @@ function FnqContainer() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showLoginRequiredPopup, setShowLoginRequiredPopup] = useState(false);
   const [isDataRestored, setIsDataRestored] = useState(false);
+  const [serviceTags, setServiceTags] = useState([]);
+  const [selectedServices, setSelectedServices] = useState([]);
   const router = useRouter();
 
   // localStorage 키
@@ -29,6 +33,17 @@ function FnqContainer() {
   // 에디터 관련 상태
   const editorRef = useRef(null);
   const [editorData, setEditorData] = useState({ blocks: [] });
+
+  useEffect(() => {
+    const toTop = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    toTop();
+    const timers = [setTimeout(toTop, 100), setTimeout(toTop, 500)];
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   // 예산 포맷팅 함수
   const formatNumber = (value) => {
@@ -73,6 +88,25 @@ function FnqContainer() {
     name: 'files',
   });
 
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const types = await getStoreTypes();
+        const materials = types.materialTypes?.map((t) => t.name) || [];
+        setServiceTags(materials.length ? materials : ['그외']);
+      } catch (err) {
+        console.error('제조 서비스 태그 가져오기 실패:', err);
+      }
+    };
+    fetchServices();
+  }, []);
+
+  const toggleService = (name) => {
+    setSelectedServices((prev) =>
+      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+    );
+  };
+
   // 파일을 Base64로 변환하는 함수
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -105,7 +139,8 @@ function FnqContainer() {
         budget: formData.budget || '',
         due_date: formData.due_date || '',
         status_id: formData.status_id || null,
-        editorData: editorData.blocks || editorData
+        editorData: editorData.blocks || editorData,
+        selectedServices,
       };
 
       // 파일 데이터 저장
@@ -144,7 +179,7 @@ function FnqContainer() {
       if (savedData) {
         const data = JSON.parse(savedData);
         Object.keys(data).forEach(key => {
-          if (data[key] && key !== 'editorData') {
+          if (data[key] && key !== 'editorData' && key !== 'selectedServices') {
             // 예산 필드는 포맷팅 적용
             if (key === 'budget' && typeof data[key] === 'number') {
               setValue(key, formatNumber(data[key].toString()));
@@ -153,6 +188,10 @@ function FnqContainer() {
             }
           }
         });
+
+        if (Array.isArray(data.selectedServices)) {
+          setSelectedServices(data.selectedServices);
+        }
 
         // 에디터 데이터 복원
         if (data.editorData) {
@@ -305,8 +344,17 @@ function FnqContainer() {
       let outputData = editorData;
       if (editorRef.current?.isReady()) {
         const editorSaveData = await editorRef.current.save();
-        // blocks 배열만 추출
         outputData = editorSaveData.blocks || [];
+      }
+
+      if (selectedServices.length > 0) {
+        outputData = [
+          {
+            type: 'paragraph',
+            data: { text: `제조 서비스: ${selectedServices.map(convertMaterialNameToKorean).join(', ')}` },
+          },
+          ...(Array.isArray(outputData) ? outputData : []),
+        ];
       }
 
       // 업로드된 파일들 처리 (URL과 파일명을 함께 저장)
@@ -391,27 +439,37 @@ function FnqContainer() {
   return (
     <>
       <S.FnqWrapper>
-        <S.FnqPageName>프로젝트 문의</S.FnqPageName>
+        <S.FnqCard>
+        <S.FnqTitle>의뢰하기</S.FnqTitle>
         <S.FnqUserForm onSubmit={handleSubmit(onSubmit)}>
           <S.FnqContext>
-            Q. 프로젝트를 어떻게 의뢰하나요?
-            <S.FnqContextItem>A. 진행 예정인 프로젝트 내용을 플랫폼에 문의해 주시면 저희가 세부 사항을 확인한 뒤 적합한 기술자를 찾아 연결해 드립니다. 복잡한 과정을 직접 거치실 필요 없이 필요한 기술자를 편리하게 만나보세요.</S.FnqContextItem>
-
-            Q. 기술자는 어떤 방식으로 연결되나요?
-            <S.FnqContextItem>A. 접수된 문의를 검토한 후 프로젝트의 성격과 필요 조건에 맞는 기술자를 선별해 안내해 드립니다. 프로젝트 특성에 따라 가장 적합한 분을 추천해 드리니 안심하고 맡겨주세요.</S.FnqContextItem>
-
-            Q. 프로젝트를 어떻게 의뢰하나요?
-            <S.FnqContextItem>A. 프로젝트 문의가 접수되면 내용을 확인한 뒤, 답변까지 보통 영업일 기준 3일~5일 정도 소요됩니다.</S.FnqContextItem>
-
-            Q. 문의 후 답변까지 얼마나 걸리나요?
-            <S.FnqContextItem>A. 진행 예정인 프로젝트 내용을 플랫폼에 문의해 주시면 저희가 세부 사항을 확인한 뒤 적합한 기술자를 찾아 연결해 드립니다. 복잡한 과정을 직접 거치실 필요 없이 필요한 기술자를 편리하게 만나보세요.</S.FnqContextItem>
-
-            Q. 문의 진행은 어떤 순서로 이뤄지나요?
-            <S.FnqContextItem>A. 프로젝트 문의는 확인중 → 중개중 → 답변완료 순서로 진행됩니다.<br /><span style={{ fontWeight: '600', color: 'red' }}>(주의) 중개중 단계에 들어가면 문의 수정이나 삭제가 불가능합니다.</span></S.FnqContextItem>
-
-            Q. 문의 내용을 변경하고 싶을 때는 어떻게 하나요?
-            <S.FnqContextItem>A. 확인중 단계라면 <Link href="/mypage" style={{ fontWeight: '600', textDecoration: 'underline', textUnderlineOffset: '5px' }}>내정보</Link> 페이지에서 직접 문의 수정이 가능합니다. 관련 요청 사항이 있으실 경우 플랫폼으로 직접 연락해주세요.</S.FnqContextItem>
-
+            <S.GuideLabel>가이드</S.GuideLabel>
+            <S.FnqContextItem>
+              Q. 프로젝트를 어떻게 의뢰하나요?
+              <br /><br />
+              A. 진행 예정인 프로젝트 내용을 플랫폼에 문의해 주시면 저희가 세부 사항을 확인한 뒤 적합한 기술자를 찾아 연결해 드립니다. 복잡한 과정을 직접 거치실 필요 없이 필요한 기술자를 만나보세요.
+            </S.FnqContextItem>
+            <S.FnqContextItem>
+              Q. 기술자는 어떤 방식으로 연결되나요?
+              <br /><br />
+              A. 접수된 문의를 검토한 후 프로젝트의 성격과 필요 조건에 맞는 기술자를 선별해 안내해 드립니다. 프로젝트 특성에 따라 가장 적합한 분을 추천해 드리니 안심하고 맡겨주세요.
+            </S.FnqContextItem>
+            <S.FnqContextItem>
+              Q. 문의 후 답변까지 얼마나 걸리나요?
+              <br /><br />
+              A. 프로젝트 문의가 접수되면 내용을 확인한 뒤, 답변까지 보통 영업일 기준 3일~5일 정도 소요됩니다.
+            </S.FnqContextItem>
+            <S.FnqContextItem>
+              Q. 문의 진행은 어떤 순서로 이뤄지나요?
+              <br /><br />
+              A. 프로젝트 문의는 확인중 → 중개중 → 답변완료 순서로 진행됩니다.
+              <br />(주의) 중개중 단계에 들어가면 문의 수정이나 삭제가 불가능합니다.
+            </S.FnqContextItem>
+            <S.FnqContextItem>
+              Q. 문의 내용을 변경하고 싶을 때는 어떻게 하나요?
+              <br /><br />
+              A. 확인중 단계라면 <Link href="/mypage" style={{ textDecoration: 'underline' }}>내정보</Link> 페이지에서 직접 문의 수정이 가능합니다. 관련 요청 사항이 있으실 경우 플랫폼으로 직접 연락해주세요.
+            </S.FnqContextItem>
           </S.FnqContext>
 
           <S.FormGroup>
@@ -428,6 +486,32 @@ function FnqContainer() {
               })}
             />
             {errors.title && <S.ErrorMessage>{errors.title.message}</S.ErrorMessage>}
+          </S.FormGroup>
+
+          <S.FormGroup>
+            <S.Label>제조 서비스</S.Label>
+            <S.Caption>요청하는 제조 서비스를 아래에서 선택해주세요. 해당사항이 없다면 아래 상세내용에 기입해주세요.</S.Caption>
+            <S.ServiceTagRow>
+              {serviceTags.map((tag) => (
+                <S.ServiceTag
+                  key={tag}
+                  type="button"
+                  active={selectedServices.includes(tag)}
+                  onClick={() => toggleService(tag)}
+                >
+                  {convertMaterialNameToKorean(tag)}
+                </S.ServiceTag>
+              ))}
+              {!serviceTags.includes('그외') && (
+                <S.ServiceTag
+                  type="button"
+                  active={selectedServices.includes('그외')}
+                  onClick={() => toggleService('그외')}
+                >
+                  그외
+                </S.ServiceTag>
+              )}
+            </S.ServiceTagRow>
           </S.FormGroup>
 
           <S.FormGroup>
@@ -549,10 +633,12 @@ function FnqContainer() {
           </S.FormGroup>
 
           <S.SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? '전송 중...' : '문의 하기'}
+            <S.SubmitLabel>{isLoading ? '전송 중...' : '문의하기'}</S.SubmitLabel>
+            <S.SubmitArrow>→</S.SubmitArrow>
           </S.SubmitButton>
 
         </S.FnqUserForm>
+        </S.FnqCard>
 
         <Popup
           isVisible={showErrorPopup}
