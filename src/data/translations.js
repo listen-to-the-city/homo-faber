@@ -30,7 +30,7 @@ export const translations = {
         getStarted: '시작하기',
         learnMore: '더 알아보기',
         headline: '아직 세상에 없던 것을 만들고 있나요?',
-        subhead: '을지로 기술자 네트워크가 당신의 제작 여정에 함께합니다.',
+        subhead: '을지로 기술자 네트워크, "산업용재 네트워크"가 당신의 제작 여정에 함께합니다.',
         vision: 'Our Vision',
         noticeTitle: 'Notice',
         noticeBody: '웹사이트를 업데이트하는 중입니다. 일시적으로 이용이 어려울 수 있으니 페이지를 새로고침해 주세요.',
